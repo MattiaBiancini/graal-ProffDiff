@@ -1,4 +1,6 @@
+import java.io.Writer;
 import java.util.HashMap;
+import java.util.Map;
 
 public class JITBulkCommand implements Command {
 	private final ArgumentParser argumentParser;
@@ -8,12 +10,12 @@ public class JITBulkCommand implements Command {
 	public JITBulkCommand() {
 		argumentParser = new ArgumentParser();
 
-		argumentMap = new HashMap<>();
+		optimizationLogsArgument = new StringArgument("optimization_logs", "Array of directories containing optimization logs of the JIT experiment.");
+		proftoolOutputsArgument = new StringArgument("proftool_outputs", "Array of proftool output files in JSON format for the JIT experiment.");
 
-		optimizationLogArgument = argumentParser.addStringArgument(
-						"optimization_log", "directory with optimization logs of the JIT experiment");
-		proftoolArgument = argumentParser.addStringArgument(
-						"proftool_output", "proftool output of the JIT experiment in JSON");
+		loadArguments(optimizationLogsArgument, proftoolOutputsArgument);
+
+
 	}
 
 	@Override
@@ -23,7 +25,13 @@ public class JITBulkCommand implements Command {
 
 	@Override
 	public String getDescription() {
-		return "Compare JIT-compiled experiments with proftool data in bulk mode.";
+
+		String description = "Compare JIT-compiled experiments with proftool data in bulk mode.";
+		description += "\nCorrect usage: " + getName() + " <optimization_logs> <proftool_outputs>";
+		description += "\n\t<optimization_logs> - Array of directories containing optimization logs of the JIT experiment.";
+		description += "\n\t<proftool_outputs> - Array of proftool output files in JSON format for the JIT experiment.";
+
+		return description;
 	}
 
 	@Override
@@ -38,10 +46,32 @@ public class JITBulkCommand implements Command {
 
 		writer.writeln();
 
-		Experiment experiment = ExperimentParser.parseExperiment(
-						ExperimentId.fromString("bulk"), proftoolArgument.getValue(), optimizationLogArgument.getValue());
-		ExperimentPair pair = new ExperimentPair(experiment, null);
-		pair.write(writer);
+		for (Map.Entry<StringArgument, StringArgument> entry : argumentMap.entrySet()) {
+			String optimizationLog = entry.getKey().getValue();
+			String proftoolOutput = entry.getValue().getValue();
+
+			Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput.getValue(), optimizationLog.getValue(), writer);
+			writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
+			writer.writeln();
+		}
+
+		ExperimentMatcher matcher = new ExperimentMatcher(writer);
+	}
+
+	private void loadArguments(StringArgument optimizationLogsArgument, StringArgument proftoolOutputsArgument) {
+		argumentMap = new HashMap<>();
+		
+		String[] optimizationLogs = optimizationLogsArgument.getValue().split(",");
+		String[] proftoolOutputs = proftoolOutputsArgument.getValue().split(",");
+
+		if (optimizationLogs.length != proftoolOutputs.length) {
+			throw new IllegalArgumentException("The number of optimization logs must match the number of proftool outputs.");
+		}
+
+		for (int i = 0; i < optimizationLogs.length; i++) {
+			argumentMap.put(optimizationLog, proftoolOutput);
+		}
+
 	}
 
 }
