@@ -21,16 +21,16 @@ public class JITBulkCommand implements Command {
 	private final ArgumentParser argumentParser;
 
 	private final Map<String, String> argumentMap = new HashMap<>();
+	private final StringArgument optimizationLogArgument;
+	private final StringArgument proftoolOutputArgument;
 	private final StringArgument experimentName;
 
 	public JITBulkCommand() {
 		argumentParser = new ArgumentParser();
 
-		StringArgument optimizationLogsArgument = argumentParser.addStringArgument("optimization_logs", "Array of directories containing optimization logs of the JIT experiment.");
-		StringArgument proftoolOutputsArgument = argumentParser.addStringArgument("proftool_outputs", "Array of proftool output files in JSON format for the JIT experiment.");
+		optimizationLogArgument = argumentParser.addStringArgument("optimization_logs", "Array of directories containing optimization logs of the JIT experiment.");
+		proftoolOutputArgument = argumentParser.addStringArgument("proftool_outputs", "Array of proftool output files in JSON format for the JIT experiment.");
 		experimentName = argumentParser.addStringArgument("experiment_names", "Optional names for the experiments, used for better identification in the output.");
-
-		loadArguments(optimizationLogsArgument, proftoolOutputsArgument);
 
 	}
 
@@ -60,6 +60,8 @@ public class JITBulkCommand implements Command {
 	public void invoke(Writer writer) throws ExperimentParserError {
 		ExplanationWriter explanationWriter = new ExplanationWriter(writer, false, true);
 		explanationWriter.explain();
+
+		loadArguments(optimizationLogArgument, proftoolOutputArgument);
 
 		writer.writeln();
 
