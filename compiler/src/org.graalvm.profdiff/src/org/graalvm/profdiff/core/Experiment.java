@@ -25,6 +25,7 @@
 package org.graalvm.profdiff.core;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -292,7 +293,6 @@ public class Experiment {
      * @param experimentName
      */
     public void writeHotMethodsCSV(Writer writer, String experimentName) throws IOException {
-
         List<String[]> csv = new ArrayList<>();
         Iterable<ProftoolMethod> topMethods = () -> proftoolMethods.stream()
                 .sorted((method1, method2) -> Long.compare(method2.getPeriod(), method1.getPeriod())).limit(10)
@@ -300,14 +300,17 @@ public class Experiment {
 
         File csvOutput = new File(experimentName + "-hot-methods.csv");
         writer.writeln("Writing hot methods CSV to " + csvOutput.getAbsolutePath());
-        try {
-            csvOutput.createNewFile();
-        } catch (IOException ex) {
-            throw new RuntimeException("Failed to create CSV output file: " + csvOutput.getAbsolutePath(), ex);
-        }
 
-        csv.add(new String[] { "experiment_name", "position", "execution_percentage", "cycles", "level", "ID",
-                "method_name" });
+        boolean fileExists = csvOutput.exists();
+        // If the file does not exist, create it and add the header
+        if (!fileExists) {
+            try {
+                csvOutput.createNewFile();
+            } catch (IOException ex) {
+                throw new RuntimeException("Failed to create CSV output file: " + csvOutput.getAbsolutePath(), ex);
+            }
+            csv.add(new String[]{"experiment_name", "position", "execution_percentage", "cycles", "level", "ID", "method_name"});
+        }
 
         int i = 0;
         for (ProftoolMethod method : topMethods) {
@@ -318,12 +321,11 @@ public class Experiment {
             String compilationId = Objects.toString(method.getCompilationId(), "");
             String methodName = method.getName();
 
-            csv.add(new String[] { experimentName, String.valueOf(i), String.format("%.2f", execution),
-                    String.format("%.2f", cycles), level, compilationId, methodName });
-
+            csv.add(new String[]{experimentName, String.valueOf(i), String.format("%.2f", execution),
+                    String.format("%.2f", cycles), level, compilationId, methodName});
         }
 
-        try (PrintWriter pw = new PrintWriter(csvOutput)) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(csvOutput, /* append= */ fileExists))) {
             csv.stream()
                     .map(this::convertToCSV)
                     .forEach(pw::println);
@@ -331,7 +333,6 @@ public class Experiment {
 
         writeExperimentSummary(writer);
         writer.writeln();
-
     }
 
     /**
