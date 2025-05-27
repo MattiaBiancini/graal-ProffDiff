@@ -21,7 +21,7 @@ public class JITBulkCommand implements Command {
 	private final ArgumentParser argumentParser;
 
 	private final Map<String, String> argumentMap = new HashMap<>();
-	private StringArgument experimentName;
+	private final StringArgument experimentName;
 
 	public JITBulkCommand() {
 		argumentParser = new ArgumentParser();
