@@ -305,11 +305,13 @@ public class Experiment {
         // If the file does not exist, create it and add the header
         if (!fileExists) {
             try {
-                csvOutput.createNewFile();
+                if(csvOutput.createNewFile()) {
+                    writer.writeln("Created new CSV output file: " + csvOutput.getAbsolutePath());
+                    csv.add(new String[]{"experiment_name", "position", "execution_percentage", "cycles", "level", "ID", "method_name"});
+                }
             } catch (IOException ex) {
                 throw new RuntimeException("Failed to create CSV output file: " + csvOutput.getAbsolutePath(), ex);
             }
-            csv.add(new String[]{"experiment_name", "position", "execution_percentage", "cycles", "level", "ID", "method_name"});
         }
 
         int i = 0;
@@ -331,8 +333,8 @@ public class Experiment {
                     .forEach(pw::println);
         }
 
-        writeExperimentSummary(writer);
-        writer.writeln();
+        // writeExperimentSummary(writer);
+        // writer.writeln();
     }
 
     /**

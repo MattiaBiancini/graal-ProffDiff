@@ -1,5 +1,6 @@
 package org.graalvm.profdiff.command;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,15 +62,21 @@ public class JITBulkCommand implements Command {
 		writer.writeln();
 
 		for (Map.Entry<String, String> entry : argumentMap.entrySet()) {
-			String optimizationLog = entry.getKey();
-			String proftoolOutput = entry.getValue();
-
-			Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
-			writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
-			writer.writeln();
+			try {
+				String optimizationLog = entry.getKey();
+				String proftoolOutput = entry.getValue();
+				
+				Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
+				writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
+				writer.writeln();
+				
+				jit.writeHotMethodsCSV(writer, experimentName.getValue());
+			}
+			catch (IOException ex) {
+				writer.writeln("Error processing experiment with optimization log '" + entry.getKey() + "' and proftool output '" + entry.getValue() + "': " + ex.getMessage());
+			}
 		}
 
-		// ExperimentMatcher matcher = new ExperimentMatcher(writer);
 	}
 
 	private void loadArguments(StringArgument optimizationLogsArgument, StringArgument proftoolOutputsArgument) {
