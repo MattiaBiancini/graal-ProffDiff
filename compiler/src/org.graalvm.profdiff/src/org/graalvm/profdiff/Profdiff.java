@@ -148,8 +148,8 @@ public class Profdiff {
         commandGroup.addCommand(new JITAOTCommand());
         commandGroup.addCommand(new AOTAOTCommand());
         commandGroup.addCommand(new AOTAOTWithJITProfileCommand());
-        commandGroup.addCommand(new HelpCommand(programArguments.getArgumentParser()));
         commandGroup.addCommand(new JITBulkCommand());
+        commandGroup.addCommand(new HelpCommand(programArguments.getArgumentParser()));
 
         try {
             programArguments.parseAndVerifyArguments(args);
