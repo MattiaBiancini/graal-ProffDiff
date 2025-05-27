@@ -292,7 +292,7 @@ public class Experiment {
      * @param writer
      * @param experimentName
      */
-    public void writeHotMethodsCSV(Writer writer, String experimentName) throws IOException {
+    public void writeHotMethodsCSV(Writer writer, String experimentName, String name) throws IOException {
         List<String[]> csv = new ArrayList<>();
         Iterable<ProftoolMethod> topMethods = () -> proftoolMethods.stream()
                 .sorted((method1, method2) -> Long.compare(method2.getPeriod(), method1.getPeriod())).limit(10)
@@ -323,7 +323,7 @@ public class Experiment {
             String compilationId = Objects.toString(method.getCompilationId(), "");
             String methodName = method.getName();
 
-            csv.add(new String[]{experimentName, compilationKind.name(), String.valueOf(i), String.format("%.2f", execution),
+            csv.add(new String[]{experimentName, name, String.valueOf(i), String.format("%.2f", execution),
                     String.format("%.2f", cycles), level, compilationId, methodName});
         }
 
