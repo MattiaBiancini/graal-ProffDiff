@@ -24,19 +24,28 @@
  */
 package org.graalvm.profdiff.core;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.Pair;
 
 /**
- * An experiment consisting of all graal-compiled methods and metadata. Additionally, this class
- * allows its {@link CompilationUnit executed methods} to be added incrementally. This is necessary
- * to be able to create an instance of the experiment first and then bind the {@link CompilationUnit
+ * An experiment consisting of all graal-compiled methods and metadata.
+ * Additionally, this class
+ * allows its {@link CompilationUnit executed methods} to be added
+ * incrementally. This is necessary
+ * to be able to create an instance of the experiment first and then bind the
+ * {@link CompilationUnit
  * executed methods} with their {@link Experiment}.
  */
 public class Experiment {
@@ -56,9 +65,12 @@ public class Experiment {
     }
 
     /**
-     * The kind of compilation of this experiment, i.e., whether it was compiled just-in-time or
-     * ahead-of-time. The field is {@code null} when it is unknown whether it is JIT or AOT. This
-     * information is unknown when we are reporting a single experiment without profiles.
+     * The kind of compilation of this experiment, i.e., whether it was compiled
+     * just-in-time or
+     * ahead-of-time. The field is {@code null} when it is unknown whether it is JIT
+     * or AOT. This
+     * information is unknown when we are reporting a single experiment without
+     * profiles.
      */
     private final CompilationKind compilationKind;
 
@@ -73,8 +85,10 @@ public class Experiment {
     private final ExperimentId experimentId;
 
     /**
-     * {@code true} if proftool data of the experiment is available, i.e., {@link #totalPeriod} and
-     * {@link CompilationUnit#getPeriod()} contain any useful information. The {@link #executionId}
+     * {@code true} if proftool data of the experiment is available, i.e.,
+     * {@link #totalPeriod} and
+     * {@link CompilationUnit#getPeriod()} contain any useful information. The
+     * {@link #executionId}
      * is also sourced from proftool.
      */
     private final boolean profileAvailable;
@@ -85,7 +99,8 @@ public class Experiment {
     private final long totalPeriod;
 
     /**
-     * A cached sum of execution periods of the compilation units. Initially {@code null} and
+     * A cached sum of execution periods of the compilation units. Initially
+     * {@code null} and
      * computed on demand.
      */
     private Long graalPeriod;
@@ -103,18 +118,19 @@ public class Experiment {
     /**
      * Constructs an experiment with an execution profile.
      *
-     * @param executionId the execution ID of the experiment
-     * @param experimentId the ID of the experiment
+     * @param executionId     the execution ID of the experiment
+     * @param experimentId    the ID of the experiment
      * @param compilationKind the compilation kind of this experiment
-     * @param totalPeriod the total period of all executed methods including non-graal executions
+     * @param totalPeriod     the total period of all executed methods including
+     *                        non-graal executions
      * @param proftoolMethods the list of all methods collected by proftool
      */
     public Experiment(
-                    String executionId,
-                    ExperimentId experimentId,
-                    CompilationKind compilationKind,
-                    long totalPeriod,
-                    List<ProftoolMethod> proftoolMethods) {
+            String executionId,
+            ExperimentId experimentId,
+            CompilationKind compilationKind,
+            long totalPeriod,
+            List<ProftoolMethod> proftoolMethods) {
         this.compilationKind = compilationKind;
         this.executionId = executionId;
         this.experimentId = experimentId;
@@ -127,7 +143,7 @@ public class Experiment {
     /**
      * Constructs an experiment without execution profile.
      *
-     * @param experimentId the ID of the experiment
+     * @param experimentId    the ID of the experiment
      * @param compilationKind the compilation kind of this experiment
      */
     public Experiment(ExperimentId experimentId, CompilationKind compilationKind) {
@@ -172,7 +188,8 @@ public class Experiment {
         if (graalPeriod != null) {
             return graalPeriod;
         }
-        graalPeriod = StreamSupport.stream(methods.getValues().spliterator(), false).mapToLong(Method::getTotalPeriod).sum();
+        graalPeriod = StreamSupport.stream(methods.getValues().spliterator(), false).mapToLong(Method::getTotalPeriod)
+                .sum();
         return graalPeriod;
     }
 
@@ -184,9 +201,12 @@ public class Experiment {
     }
 
     /**
-     * Returns whether proftool data is available to the experiment. If it is not, there is no
-     * information about the period of execution of the experiment and individual compilation units.
-     * We also do not have the {@link #getExecutionId() executionId}, which also comes from
+     * Returns whether proftool data is available to the experiment. If it is not,
+     * there is no
+     * information about the period of execution of the experiment and individual
+     * compilation units.
+     * We also do not have the {@link #getExecutionId() executionId}, which also
+     * comes from
      * proftool.
      *
      * @return {@code true} if proftool data is available
@@ -196,7 +216,8 @@ public class Experiment {
     }
 
     /**
-     * Gets the methods containing at least one hot compilation unit in the experiment, mapped by
+     * Gets the methods containing at least one hot compilation unit in the
+     * experiment, mapped by
      * method name.
      *
      * @return methods with a hot compilation unit, mapped by method name
@@ -212,9 +233,12 @@ public class Experiment {
     }
 
     /**
-     * Writes a summary of the experiment. Includes the number of methods collected (proftool and
-     * optimization log), relative period of graal-compiled methods, the number and relative period
-     * of hot methods and the list of top proftool methods. Execution statistics are omitted if the
+     * Writes a summary of the experiment. Includes the number of methods collected
+     * (proftool and
+     * optimization log), relative period of graal-compiled methods, the number and
+     * relative period
+     * of hot methods and the list of top proftool methods. Execution statistics are
+     * omitted if the
      * profile is not available.
      *
      * @param writer the destination writer
@@ -236,22 +260,77 @@ public class Experiment {
         if (profileAvailable) {
             writer.writeln("Collected proftool data for " + proftoolMethods.size() + " compilation units");
             writer.writeln("Graal-compiled methods account for " + graalExecutionPercent + "% of execution");
-            writer.writeln(countHotCompilationUnits() + " hot compilation units account for " + graalHotExecutionPercent + "% of execution");
+            writer.writeln(countHotCompilationUnits() + " hot compilation units account for " + graalHotExecutionPercent
+                    + "% of execution");
             writer.writeln(String.format("%.2f billion cycles total", (double) totalPeriod / ProftoolMethod.BILLION));
             writer.writeln("Top methods");
             writer.increaseIndent();
             writer.writeln("Execution     Cycles  Level      ID  Method");
-            Iterable<ProftoolMethod> topMethods = () -> proftoolMethods.stream().sorted((method1, method2) -> Long.compare(method2.getPeriod(), method1.getPeriod())).limit(10).iterator();
+            Iterable<ProftoolMethod> topMethods = () -> proftoolMethods.stream()
+                    .sorted((method1, method2) -> Long.compare(method2.getPeriod(), method1.getPeriod())).limit(10)
+                    .iterator();
             for (ProftoolMethod method : topMethods) {
                 double execution = (double) method.getPeriod() / totalPeriod * 100;
                 double cycles = (double) method.getPeriod() / ProftoolMethod.BILLION;
                 String level = Objects.toString(method.getLevel(), "");
                 String compilationId = Objects.toString(method.getCompilationId(), "");
-                writer.writeln(String.format("%8.2f%% %10.2f %6s %7s  %s", execution, cycles, level, compilationId, method.getName()));
+                writer.writeln(String.format("%8.2f%% %10.2f %6s %7s  %s", execution, cycles, level, compilationId,
+                        method.getName()));
             }
             writer.decreaseIndent();
         }
         writer.decreaseIndent();
+    }
+
+    /**
+     * Writes a CSV file with the top 10 hot methods in the experiment. The CSV file
+     * contains the
+     * following columns: experiment_name, position, execution_percentage, cycles,
+     * level, ID, method_name.
+     * 
+     * @param writer
+     * @param experimentName
+     */
+    public void writeHotMethodsCSV(Writer writer, String experimentName) throws IOException {
+
+        List<String[]> csv = new ArrayList<>();
+        Iterable<ProftoolMethod> topMethods = () -> proftoolMethods.stream()
+                .sorted((method1, method2) -> Long.compare(method2.getPeriod(), method1.getPeriod())).limit(10)
+                .iterator();
+
+        File csvOutput = new File(experimentName + "-hot-methods.csv");
+        try {
+            csvOutput.createNewFile();
+        } catch (IOException ex) {
+            throw new RuntimeException("Failed to create CSV output file: " + csvOutput.getAbsolutePath(), ex);
+        }
+
+        csv.add(new String[] { "experiment_name", "position", "execution_percentage", "cycles", "level", "ID",
+                "method_name" });
+
+        int i = 0;
+        for (ProftoolMethod method : topMethods) {
+            i++;
+            double execution = (double) method.getPeriod() / totalPeriod * 100;
+            double cycles = (double) method.getPeriod() / ProftoolMethod.BILLION;
+            String level = Objects.toString(method.getLevel(), "");
+            String compilationId = Objects.toString(method.getCompilationId(), "");
+            String methodName = method.getName();
+
+            csv.add(new String[] { experimentName, String.valueOf(i), String.format("%.2f", execution),
+                    String.format("%.2f", cycles), level, compilationId, methodName });
+
+        }
+
+        try (PrintWriter pw = new PrintWriter(csvOutput)) {
+            csv.stream()
+                    .map(this::convertToCSV)
+                    .forEach(pw::println);
+        }
+
+        writeExperimentSummary(writer);
+        writer.writeln();
+
     }
 
     /**
@@ -260,7 +339,8 @@ public class Experiment {
      * @return the number of compilation units in the experiment
      */
     private long countCompilationUnits() {
-        return StreamSupport.stream(methods.getValues().spliterator(), false).mapToLong(method -> method.getCompilationUnits().size()).sum();
+        return StreamSupport.stream(methods.getValues().spliterator(), false)
+                .mapToLong(method -> method.getCompilationUnits().size()).sum();
     }
 
     /**
@@ -278,11 +358,13 @@ public class Experiment {
      * @return the total execution period of hot Graal execution units
      */
     private long sumHotGraalPeriod() {
-        return StreamSupport.stream(getCompilationUnits().spliterator(), false).filter(CompilationUnit::isHot).mapToLong(CompilationUnit::getPeriod).sum();
+        return StreamSupport.stream(getCompilationUnits().spliterator(), false).filter(CompilationUnit::isHot)
+                .mapToLong(CompilationUnit::getPeriod).sum();
     }
 
     /**
-     * Gets a method by name, or creates it and adds it to the experiment if it does not exist.
+     * Gets a method by name, or creates it and adds it to the experiment if it does
+     * not exist.
      *
      * @param methodName the name of the method
      * @return the method with the given name
@@ -297,20 +379,26 @@ public class Experiment {
     }
 
     /**
-     * Creates and adds a compilation unit to this experiment. Creates a {@link Method} (if
+     * Creates and adds a compilation unit to this experiment. Creates a
+     * {@link Method} (if
      * necessary) and adds the compilation unit to the method.
      *
-     * @param multiMethodName the name of the root method of the compilation unit (including a
-     *            multi-method key if applicable)
-     * @param compilationId compilation ID of the compilation unit
-     * @param period the number of cycles spent executing the method (collected by proftool)
-     * @param treeLoader a loader of the compilation unit's optimization and inlining tree
+     * @param multiMethodName the name of the root method of the compilation unit
+     *                        (including a
+     *                        multi-method key if applicable)
+     * @param compilationId   compilation ID of the compilation unit
+     * @param period          the number of cycles spent executing the method
+     *                        (collected by proftool)
+     * @param treeLoader      a loader of the compilation unit's optimization and
+     *                        inlining tree
      * @return the added compilation unit
      */
-    public CompilationUnit addCompilationUnit(String multiMethodName, String compilationId, long period, CompilationUnit.TreeLoader treeLoader) {
+    public CompilationUnit addCompilationUnit(String multiMethodName, String compilationId, long period,
+            CompilationUnit.TreeLoader treeLoader) {
         graalPeriod = null;
         Pair<String, String> splitName = Method.splitMultiMethodName(multiMethodName);
-        return getMethodOrCreate(splitName.getLeft()).addCompilationUnit(compilationId, period, treeLoader, splitName.getRight());
+        return getMethodOrCreate(splitName.getLeft()).addCompilationUnit(compilationId, period, treeLoader,
+                splitName.getRight());
     }
 
     /**
@@ -334,7 +422,8 @@ public class Experiment {
             }
 
             private void skipMethodsWithoutCompilationUnits() {
-                while (methodIterator.hasNext() && (compilationUnitIterator == null || !compilationUnitIterator.hasNext())) {
+                while (methodIterator.hasNext()
+                        && (compilationUnitIterator == null || !compilationUnitIterator.hasNext())) {
                     compilationUnitIterator = methodIterator.next().getCompilationUnits().iterator();
                 }
             }
@@ -342,9 +431,45 @@ public class Experiment {
     }
 
     /**
-     * Gets an iterable over methods sorted by the execution period, with the greatest period first.
+     * Gets an iterable over methods sorted by the execution period, with the
+     * greatest period first.
      */
     public Iterable<Method> getMethodsByDescendingPeriod() {
-        return () -> StreamSupport.stream(methods.getValues().spliterator(), false).sorted(Comparator.comparingLong(method -> -method.getTotalPeriod())).iterator();
+        return () -> StreamSupport.stream(methods.getValues().spliterator(), false)
+                .sorted(Comparator.comparingLong(method -> -method.getTotalPeriod())).iterator();
+    }
+
+    /**
+     * Converts an array of strings to a CSV line, escaping special characters
+     * (commas, quotes, and newlines).
+     * 
+     * @param data the array of strings to convert
+     * @return a CSV line as a string, with each value escaped and separated by
+     *         commas
+     */
+    private String convertToCSV(String[] data) {
+        return Stream.of(data)
+                .map(this::escapeSpecialCharacters)
+                .collect(Collectors.joining(","));
+    }
+
+    /**
+     * Escapes special characters in a string for CSV format.
+     * Special characters include commas, quotes, and newlines.
+     * 
+     * @param data the string to escape
+     * @return the escaped string suitable for CSV output
+     * @throws IllegalArgumentException if the input data is null
+     */
+    private String escapeSpecialCharacters(String data) {
+        if (data == null) {
+            throw new IllegalArgumentException("Input data cannot be null");
+        }
+        String escapedData = data.replaceAll("\\R", " ");
+        if (escapedData.contains(",") || escapedData.contains("\"") || escapedData.contains("'")) {
+            escapedData = escapedData.replace("\"", "\"\"");
+            escapedData = "\"" + escapedData + "\"";
+        }
+        return escapedData;
     }
 }

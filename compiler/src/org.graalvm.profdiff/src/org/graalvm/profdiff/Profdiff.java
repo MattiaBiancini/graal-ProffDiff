@@ -33,6 +33,7 @@ import org.graalvm.profdiff.command.AOTAOTCommand;
 import org.graalvm.profdiff.command.AOTAOTWithJITProfileCommand;
 import org.graalvm.profdiff.command.HelpCommand;
 import org.graalvm.profdiff.command.JITAOTCommand;
+import org.graalvm.profdiff.command.JITBulkCommand;
 import org.graalvm.profdiff.command.JITJITCommand;
 import org.graalvm.profdiff.command.ReportCommand;
 import org.graalvm.profdiff.core.HotCompilationUnitPolicy;
@@ -148,6 +149,7 @@ public class Profdiff {
         commandGroup.addCommand(new AOTAOTCommand());
         commandGroup.addCommand(new AOTAOTWithJITProfileCommand());
         commandGroup.addCommand(new HelpCommand(programArguments.getArgumentParser()));
+        commandGroup.addCommand(new JITBulkCommand());
 
         try {
             programArguments.parseAndVerifyArguments(args);

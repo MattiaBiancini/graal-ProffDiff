@@ -1,20 +1,35 @@
-import java.io.Writer;
+package org.graalvm.profdiff.command;
+
 import java.util.HashMap;
 import java.util.Map;
 
+import org.graalvm.profdiff.args.ArgumentParser;
+import org.graalvm.profdiff.args.StringArgument;
+import org.graalvm.profdiff.core.Experiment;
+import org.graalvm.profdiff.core.ExperimentId;
+import org.graalvm.profdiff.core.Writer;
+import org.graalvm.profdiff.parser.ExperimentParser;
+import org.graalvm.profdiff.parser.ExperimentParserError;
+
+
+/**
+ * Compares multiple JIT-compiled experiments with proftool data in bulk mode.
+ * This command allows users to specify multiple optimization logs and proftool outputs
+ */
 public class JITBulkCommand implements Command {
 	private final ArgumentParser argumentParser;
 
-	private final Map<StringArgument, StringArgument> argumentMap;
+	private final Map<String, String> argumentMap = new HashMap<>();
+	private StringArgument experimentName;
 
 	public JITBulkCommand() {
 		argumentParser = new ArgumentParser();
 
-		optimizationLogsArgument = new StringArgument("optimization_logs", "Array of directories containing optimization logs of the JIT experiment.");
-		proftoolOutputsArgument = new StringArgument("proftool_outputs", "Array of proftool output files in JSON format for the JIT experiment.");
+		StringArgument optimizationLogsArgument = argumentParser.addStringArgument("optimization_logs", "Array of directories containing optimization logs of the JIT experiment.");
+		StringArgument proftoolOutputsArgument = argumentParser.addStringArgument("proftool_outputs", "Array of proftool output files in JSON format for the JIT experiment.");
+		experimentName = argumentParser.addStringArgument("experiment_names", "Optional names for the experiments, used for better identification in the output.");
 
 		loadArguments(optimizationLogsArgument, proftoolOutputsArgument);
-
 
 	}
 
@@ -30,6 +45,7 @@ public class JITBulkCommand implements Command {
 		description += "\nCorrect usage: " + getName() + " <optimization_logs> <proftool_outputs>";
 		description += "\n\t<optimization_logs> - Array of directories containing optimization logs of the JIT experiment.";
 		description += "\n\t<proftool_outputs> - Array of proftool output files in JSON format for the JIT experiment.";
+		description += "\n\t[experiment_name] - Optional names for the experiments, used for better identification in the output.";
 
 		return description;
 	}
@@ -46,20 +62,24 @@ public class JITBulkCommand implements Command {
 
 		writer.writeln();
 
-		for (Map.Entry<StringArgument, StringArgument> entry : argumentMap.entrySet()) {
-			String optimizationLog = entry.getKey().getValue();
-			String proftoolOutput = entry.getValue().getValue();
+		for (Map.Entry<String, String> entry : argumentMap.entrySet()) {
+			String optimizationLog = entry.getKey();
+			String proftoolOutput = entry.getValue();
 
-			Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput.getValue(), optimizationLog.getValue(), writer);
+			Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
 			writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
+			if (experimentName.getValue() == null || experimentName.getValue().isEmpty()) {
+				jit.writeHotMethodsCSV(writer, jit.getExperimentId().toString());
+			} else {
+				jit.writeHotMethodsCSV(writer, experimentName.getValue());
+			}
 			writer.writeln();
 		}
 
-		ExperimentMatcher matcher = new ExperimentMatcher(writer);
+		// ExperimentMatcher matcher = new ExperimentMatcher(writer);
 	}
 
 	private void loadArguments(StringArgument optimizationLogsArgument, StringArgument proftoolOutputsArgument) {
-		argumentMap = new HashMap<>();
 		
 		String[] optimizationLogs = optimizationLogsArgument.getValue().split(",");
 		String[] proftoolOutputs = proftoolOutputsArgument.getValue().split(",");
@@ -69,7 +89,7 @@ public class JITBulkCommand implements Command {
 		}
 
 		for (int i = 0; i < optimizationLogs.length; i++) {
-			argumentMap.put(optimizationLog, proftoolOutput);
+			argumentMap.put(optimizationLogs[i], proftoolOutputs[i]);
 		}
 
 	}
