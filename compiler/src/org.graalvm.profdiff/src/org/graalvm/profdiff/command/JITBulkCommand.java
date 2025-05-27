@@ -1,5 +1,6 @@
 package org.graalvm.profdiff.command;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,9 +70,17 @@ public class JITBulkCommand implements Command {
 			Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
 			writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
 			if (experimentName.getValue() == null || experimentName.getValue().isEmpty()) {
-				jit.writeHotMethodsCSV(writer, jit.getExperimentId().toString());
+                            try {
+                                jit.writeHotMethodsCSV(writer, jit.getExperimentId().toString());
+                            } catch (IOException ex) {
+								System.err.println("Error writing hot methods CSV: " + ex.getMessage());
+							}
 			} else {
-				jit.writeHotMethodsCSV(writer, experimentName.getValue());
+                            try {
+                                jit.writeHotMethodsCSV(writer, experimentName.getValue());
+                            } catch (IOException ex) {
+								System.err.println("Error writing hot methods CSV: " + ex.getMessage());
+                            }
 			}
 			writer.writeln();
 		}
