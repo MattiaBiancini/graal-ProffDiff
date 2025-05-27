@@ -307,7 +307,7 @@ public class Experiment {
             try {
                 if(csvOutput.createNewFile()) {
                     writer.writeln("Created new CSV output file: " + csvOutput.getAbsolutePath());
-                    csv.add(new String[]{"experiment_name", "position", "execution_percentage", "cycles", "level", "ID", "method_name"});
+                    csv.add(new String[]{"experiment_name", "run_number", "position", "execution_percentage", "cycles", "level", "ID", "method_name"});
                 }
             } catch (IOException ex) {
                 throw new RuntimeException("Failed to create CSV output file: " + csvOutput.getAbsolutePath(), ex);
@@ -323,7 +323,7 @@ public class Experiment {
             String compilationId = Objects.toString(method.getCompilationId(), "");
             String methodName = method.getName();
 
-            csv.add(new String[]{experimentName, String.valueOf(i), String.format("%.2f", execution),
+            csv.add(new String[]{experimentName, compilationKind.name(), String.valueOf(i), String.format("%.2f", execution),
                     String.format("%.2f", cycles), level, compilationId, methodName});
         }
 
