@@ -299,6 +299,7 @@ public class Experiment {
                 .iterator();
 
         File csvOutput = new File(experimentName + "-hot-methods.csv");
+        writer.writeln("Writing hot methods CSV to " + csvOutput.getAbsolutePath());
         try {
             csvOutput.createNewFile();
         } catch (IOException ex) {

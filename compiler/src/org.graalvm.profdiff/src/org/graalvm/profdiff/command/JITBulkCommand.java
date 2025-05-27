@@ -43,10 +43,6 @@ public class JITBulkCommand implements Command {
 	public String getDescription() {
 
 		String description = "Compare JIT-compiled experiments with proftool data in bulk mode.";
-		description += "\nCorrect usage: " + getName() + " <optimization_logs> <proftool_outputs>";
-		description += "\n\t<optimization_logs> - Array of directories containing optimization logs of the JIT experiment.";
-		description += "\n\t<proftool_outputs> - Array of proftool output files in JSON format for the JIT experiment.";
-		description += "\n\t[experiment_name] - Optional names for the experiments, used for better identification in the output.";
 
 		return description;
 	}
@@ -72,17 +68,17 @@ public class JITBulkCommand implements Command {
 			Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
 			writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
 			if (experimentName.getValue() == null || experimentName.getValue().isEmpty()) {
-                            try {
-                                jit.writeHotMethodsCSV(writer, jit.getExperimentId().toString());
-                            } catch (IOException ex) {
-								System.err.println("Error writing hot methods CSV: " + ex.getMessage());
-							}
+				try {
+					jit.writeHotMethodsCSV(writer, jit.getExperimentId().toString());
+				} catch (IOException ex) {
+					writer.writeln("Error writing hot methods CSV: " + ex.getMessage());
+				}
 			} else {
-                            try {
-                                jit.writeHotMethodsCSV(writer, experimentName.getValue());
-                            } catch (IOException ex) {
-								System.err.println("Error writing hot methods CSV: " + ex.getMessage());
-                            }
+				try {
+					jit.writeHotMethodsCSV(writer, experimentName.getValue());
+				} catch (IOException ex) {
+					writer.writeln("Error writing hot methods CSV: " + ex.getMessage());
+				}
 			}
 			writer.writeln();
 		}
