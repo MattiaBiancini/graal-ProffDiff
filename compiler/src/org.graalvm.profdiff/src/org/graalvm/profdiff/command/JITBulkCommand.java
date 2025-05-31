@@ -68,6 +68,7 @@ public class JITBulkCommand implements Command {
 				
 				Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
 				writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
+				writer.writeln("Processing experiment with optimization log '" + optimizationLog + "' and proftool output '" + proftoolOutput + "'...");
 				writer.writeln();
 
 				String name = proftoolOutput.substring(proftoolOutput.lastIndexOf('/') + 1, proftoolOutput.lastIndexOf('.'));
