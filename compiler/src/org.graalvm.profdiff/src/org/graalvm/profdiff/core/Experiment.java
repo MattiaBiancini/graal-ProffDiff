@@ -306,7 +306,7 @@ public class Experiment {
 
         boolean fileExists = csvOutput.exists();
         // If the file does not exist, create it and add the header
-        if (!fileExists) {
+        if (!fileExists) { 
             try {
                 if(csvOutput.createNewFile()) {
                     writer.writeln("Created new CSV output file: " + csvOutput.getAbsolutePath());
