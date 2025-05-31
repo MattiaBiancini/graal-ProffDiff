@@ -68,12 +68,11 @@ public class JITBulkCommand implements Command {
 				
 				Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
 				writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
-				writer.writeln("Processing experiment with optimization log '" + optimizationLog + "' and proftool output '" + proftoolOutput + "'...");
 				writer.writeln();
 
 				String name = proftoolOutput.substring(proftoolOutput.lastIndexOf('/') + 1, proftoolOutput.lastIndexOf('.'));
-				
-				jit.writeHotMethodsCSV(writer, experimentName.getValue(), name);
+
+				jit.writeHotMethodsCSV(writer, experimentName.getValue(), name, optimizationLog, proftoolOutput);
 			}
 			catch (IOException ex) {
 				writer.writeln("Error processing experiment with optimization log '" + entry.getKey() + "' and proftool output '" + entry.getValue() + "': " + ex.getMessage());

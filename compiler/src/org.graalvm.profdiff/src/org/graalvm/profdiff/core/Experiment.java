@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -292,7 +294,7 @@ public class Experiment {
      * @param writer
      * @param experimentName
      */
-    public void writeHotMethodsCSV(Writer writer, String experimentName, String name) throws IOException {
+    public void writeHotMethodsCSV(Writer writer, String experimentName, String name, String optimizationLog, String proftoolOutput) throws IOException {
         List<String[]> csv = new ArrayList<>();
         Iterable<ProftoolMethod> topMethods = () -> proftoolMethods.stream()
                 .sorted((method1, method2) -> Long.compare(method2.getPeriod(), method1.getPeriod())).limit(10)
@@ -300,6 +302,7 @@ public class Experiment {
 
         File csvOutput = new File(experimentName + "-hot-methods.csv");
         writer.writeln("Writing hot methods CSV to " + csvOutput.getAbsolutePath());
+        writer.writeln("Processing experiment with optimization log '" + optimizationLog + "' and proftool output '" + proftoolOutput + "'...");
 
         boolean fileExists = csvOutput.exists();
         // If the file does not exist, create it and add the header
