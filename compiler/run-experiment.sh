@@ -115,7 +115,6 @@ run_graal_version() {
 		JVMCI_FLAGS=(
 			-XX:+UnlockExperimentalVMOptions
 			-XX:+UnlockDiagnosticVMOptions
-			-XX:+PrintInlining
 			-XX:+EnableJVMCI
 			-XX:+UseJVMCICompiler
 			-Djvmci.Compiler=graal
