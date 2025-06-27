@@ -206,7 +206,7 @@ run_graal_version() {
 		"${EXPORT_AGENT_FLAGS[@]}" \
 		"${BENCH_FLAGS[@]}"
 
-		print_environment_metadata > "${BENCHMARK}@${WORKLOAD}_${formatted_run}.meta"
+		print_environment_metadata > "${OUTPUT_DIR}/${CSV_DIR}/${BENCHMARK}@${WORKLOAD}_${formatted_run}.meta"
 
 		mx profjson -E "${OUTPUT_DIR}/$PROFTOOL_DIR" -o "${OUTPUT_DIR}/${CSV_DIR}/run-${run}.json"
 		mx profdiff report "${OUTPUT_DIR}/$PROFTOOL_DIR/optimization_log" "${OUTPUT_DIR}/${CSV_DIR}/run-${run}.json" >> "${OUTPUT_DIR}/${CSV_DIR}/run-${run}.log"
