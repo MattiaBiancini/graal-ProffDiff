@@ -26,7 +26,7 @@ while getopts ":b:w:e:d:r:i:" opt; do
 		b) BENCHMARK="$OPTARG" ;;
 		w) WORKLOAD="$OPTARG" ;;
 		e) EXPERIMENT_NAME="$OPTARG" ;;
-		d) OUTPUT_DIR="$OPTARG" ;;
+		d) OUTPUT_DIR="$OPTARG/$EXPERIMENT_NAME" ;;
 		r) RUNS="$OPTARG" ;;
 		i) ITERATIONS="$OPTARG" ;;
 		\?) echo "Invalid option -$OPTARG" >&2; usage ;;
@@ -126,14 +126,14 @@ run_graal_version() {
 		# 3. Compilation logging & debug
 		COMP_LOG_FLAGS=(
 			-XX:+LogCompilation
-			-XX:LogFile="${PROFTOOL_DIR}/log_compilation"
+			-XX:LogFile="${OUTPUT_DIR}/${PROFTOOL_DIR}/log_compilation"
 			-XX:+DebugNonSafepoints
 			-Djdk.graal.DumpOnError=true
 			-Djdk.graal.ShowDumpFiles=true
 			-Djdk.graal.PrintGraph=Network
 			-Djdk.graal.TrackNodeSourcePosition=true
 			-Djdk.graal.OptimizationLog=Directory
-			-Djdk.graal.OptimizationLogPath="${PROFTOOL_DIR}/optimization_log"
+			-Djdk.graal.OptimizationLogPath="${OUTPUT_DIR}/${PROFTOOL_DIR}/optimization_log"
 		)
 
 		# 4. GraalVM tuning
@@ -158,7 +158,7 @@ run_graal_version() {
 				EXPORT_AGENT_FLAGS=(
 						--add-exports=java.base/jdk.internal.misc=jdk.graal.compiler
 						-Dgraalvm.locatorDisabled=true
-						-agentpath:"/home/user2/mx/mxbuild/linux-amd64-jdk24/com.oracle.jvmtiasmagent/linux-amd64/glibc/libjvmtiasmagent.so=${PROFTOOL_DIR}/jvmti_asm_file"
+						-agentpath:"/home/user2/mx/mxbuild/linux-amd64-jdk24/com.oracle.jvmtiasmagent/linux-amd64/glibc/libjvmtiasmagent.so=${OUTPUT_DIR}/${PROFTOOL_DIR}/jvmti_asm_file"
 						-agentpath:"$HOME_DIR/benchmarks/renaissance/files/libubench-agent.so"
 				)
 
@@ -176,7 +176,7 @@ run_graal_version() {
 				EXPORT_AGENT_FLAGS=(
 						--add-exports=java.base/jdk.internal.misc=jdk.graal.compiler
 						-Dgraalvm.locatorDisabled=true
-						-agentpath:"/home/user2/mx/mxbuild/linux-amd64-jdk24/com.oracle.jvmtiasmagent/linux-amd64/glibc/libjvmtiasmagent.so=${PROFTOOL_DIR}/jvmti_asm_file"
+						-agentpath:"/home/user2/mx/mxbuild/linux-amd64-jdk24/com.oracle.jvmtiasmagent/linux-amd64/glibc/libjvmtiasmagent.so=${OUTPUT_DIR}/${PROFTOOL_DIR}/jvmti_asm_file"
 						-Djava.security.manager=allow
 						-Dsys.ai.h2o.debug.allowJavaVersions=24
 						-agentpath:"$HOME_DIR/benchmarks/dacapo-chopin/files/libubench-agent.so"
@@ -197,6 +197,13 @@ run_graal_version() {
 
 
 		# === invoking java with all groups ===
+
+		echo "Running perf record..."
+		echo "Command: perf record -k 1 --freq 1000 --event cycles --output ${OUTPUT_DIR}/${PROFTOOL_DIR}/perf_binary_file ${JAVA_CMD} [args]"
+
+		# Optionally: try without perf first to validate Java args
+
+
 		perf record -k 1 --freq 1000 --event cycles --output "${OUTPUT_DIR}/${PROFTOOL_DIR}/perf_binary_file" \
 		"${JAVA_CMD}" \
 		"${SERVER_FLAGS[@]}" \
@@ -251,13 +258,14 @@ done
 optimization_list=""
 json_list=""
 
-# Loop from 1 to 30
-for i in $(seq 1 $RUNS); do
-	optimization_list+="${OUTPUT_DIR}/proftool_graalvm-${version}_${i}/optimization_log,"
-	json_list+="${OUTPUT_DIR}/${CSV_DIR}/run-${i}.json,"
+for version in "${VERSIONS[@]}"; do
+	CSV_DIR="csv-${version}"
+	for i in $(seq 1 $RUNS); do
+		optimization_list+="${OUTPUT_DIR}/proftool_graalvm-${version}_${i}/optimization_log,"
+		json_list+="${OUTPUT_DIR}/${CSV_DIR}/run-${i}.json,"
+	done
 done
 
-# Remove trailing commas
 optimization_list=${optimization_list%,}
 json_list=${json_list%,}
 
