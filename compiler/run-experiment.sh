@@ -197,13 +197,6 @@ run_graal_version() {
 
 
 		# === invoking java with all groups ===
-
-		echo "Running perf record..."
-		echo "Command: perf record -k 1 --freq 1000 --event cycles --output ${OUTPUT_DIR}/${PROFTOOL_DIR}/perf_binary_file ${JAVA_CMD} [args]"
-
-		# Optionally: try without perf first to validate Java args
-
-
 		perf record -k 1 --freq 1000 --event cycles --output "${OUTPUT_DIR}/${PROFTOOL_DIR}/perf_binary_file" \
 		"${JAVA_CMD}" \
 		"${SERVER_FLAGS[@]}" \
