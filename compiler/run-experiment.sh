@@ -66,6 +66,8 @@ echo "Output Dir: $OUTPUT_DIR"
 echo "Runs: $RUNS"
 echo "Iterations: $ITERATIONS"
 
+mkdir -p "$OUTPUT_DIR"
+
 # EXPERIMENT
 
 print_environment_metadata() {
@@ -195,7 +197,7 @@ run_graal_version() {
 
 
 		# === invoking java with all groups ===
-		perf record -k 1 --freq 1000 --event cycles --output "${PROFTOOL_DIR}/perf_binary_file" \
+		perf record -k 1 --freq 1000 --event cycles --output "${OUTPUT_DIR}/${PROFTOOL_DIR}/perf_binary_file" \
 		"${JAVA_CMD}" \
 		"${SERVER_FLAGS[@]}" \
 		"${JVMCI_FLAGS[@]}" \
