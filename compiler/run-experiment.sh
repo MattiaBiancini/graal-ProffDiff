@@ -258,23 +258,23 @@ for version in "${VERSIONS[@]}"; do
 		optimization_list+="${OUTPUT_DIR}/proftool_graalvm-${version}_${i}/optimization_log,"
 		json_list+="${OUTPUT_DIR}/${CSV_DIR}/run-${i}.json,"
 	done
+
+	optimization_list=${optimization_list%,}
+	json_list=${json_list%,}
+
+	mx profdiff jit-bulk "$optimization_list" "$json_list" "$EXPERIMENT_NAME-$version" > $EXPERIMENT_NAME-$version.log
 done
-
-optimization_list=${optimization_list%,}
-json_list=${json_list%,}
-
-mx profdiff jit-bulk "$optimization_list" "$json_list" $EXPERIMENT_NAME > $EXPERIMENT_NAME.log
 
 source "${HOME_DIR}/.venv/bin/activate"
 EXPERIMENT_ARGS=()
 for version in "${VERSIONS[@]}"; do
-		CSV_DIR="csv-${version}"
-		EXPERIMENT_ARGS+=(--experiment "$EXPERIMENT_NAME" "${OUTPUT_DIR}/${CSV_DIR}/")
+	CSV_DIR="csv-${version}"
+	EXPERIMENT_ARGS+=(--experiment "$EXPERIMENT_NAME" "${OUTPUT_DIR}/${CSV_DIR}/")
 done
 
 # Now run the command with all versioned inputs
 "${HOME_DIR}/collect-csv.py" \
-		-o "${OUTPUT_DIR}/${WORKLOAD}-${EXPERIMENT_NAME}.csv" \
-		"${EXPERIMENT_ARGS[@]}"
+	-o "${OUTPUT_DIR}/${WORKLOAD}-${EXPERIMENT_NAME}.csv" \
+	"${EXPERIMENT_ARGS[@]}"
 
 
