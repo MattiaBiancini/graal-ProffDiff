@@ -24,6 +24,7 @@ public class JITBulkCommand implements Command {
 	private final StringArgument optimizationLogArgument;
 	private final StringArgument proftoolOutputArgument;
 	private final StringArgument experimentName;
+	private final StringArgument outputDirectoryArgument;
 
 	public JITBulkCommand() {
 		argumentParser = new ArgumentParser();
@@ -31,7 +32,7 @@ public class JITBulkCommand implements Command {
 		optimizationLogArgument = argumentParser.addStringArgument("optimization_logs", "Array of directories containing optimization logs of the JIT experiment.");
 		proftoolOutputArgument = argumentParser.addStringArgument("proftool_outputs", "Array of proftool output files in JSON format for the JIT experiment.");
 		experimentName = argumentParser.addStringArgument("experiment_names", "Optional names for the experiments, used for better identification in the output.");
-
+		outputDirectoryArgument = argumentParser.addStringArgument("output_directory", "Directory where the output files will be written.");
 	}
 
 	@Override
@@ -66,13 +67,13 @@ public class JITBulkCommand implements Command {
 				String optimizationLog = entry.getKey();
 				String proftoolOutput = entry.getValue();
 				
-				Experiment jit = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
-				writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(jit);
+				Experiment experiment = ExperimentParser.parseOrPanic(ExperimentId.ONE, Experiment.CompilationKind.JIT, proftoolOutput, optimizationLog, writer);
+				writer.getOptionValues().getHotCompilationUnitPolicy().markHotCompilationUnits(experiment);
 				writer.writeln();
 
 				String name = proftoolOutput.substring(proftoolOutput.lastIndexOf('/') + 1, proftoolOutput.lastIndexOf('.'));
 
-				jit.writeHotMethodsCSV(writer, experimentName.getValue(), name, optimizationLog, proftoolOutput);
+				experiment.writeHotMethodsCSV(writer, experimentName.getValue(), name, optimizationLog, proftoolOutput, outputDirectoryArgument.getValue());
 			}
 			catch (IOException ex) {
 				writer.writeln("Error processing experiment with optimization log '" + entry.getKey() + "' and proftool output '" + entry.getValue() + "': " + ex.getMessage());

@@ -71,16 +71,18 @@ mkdir -p "$OUTPUT_DIR"
 # EXPERIMENT
 
 print_environment_metadata() {
+	local version=$1
+	
 	echo MACHINE_TYPE="cluster"
-	echo PLATFORM_NAME="graalvm-${VERSION}"
+	echo PLATFORM_NAME="graalvm-${version}"
 	echo NODE_NAME="node6"
 	echo KERNEL_VERSION="5.15.0-25-generic"
-	if [ "$VERSION" = "23" ]; then
+	if [ "$version" = "23" ]; then
 		echo JAVA_VERSION="java 23.0.1 2024-10-15"
-	elif [ "$VERSION" = "24" ]; then
+	elif [ "$version" = "24" ]; then
 		echo JAVA_VERSION="java 24 2025-03-18"
 	else
-		echo "Unsupported GraalVM version: $VERSION"
+		echo "Unsupported GraalVM version: $version"
 	fi
 	echo LIBC_VERSION="2.35"
 	echo PATCH_COMMIT=""
@@ -205,7 +207,7 @@ run_graal_version() {
 		"${EXPORT_AGENT_FLAGS[@]}" \
 		"${BENCH_FLAGS[@]}"
 
-		print_environment_metadata > "${OUTPUT_DIR}/${CSV_DIR}/${BENCHMARK}@${WORKLOAD}_${formatted_run}.meta"
+		print_environment_metadata "$version" > "${OUTPUT_DIR}/${CSV_DIR}/${BENCHMARK}@${WORKLOAD}_${formatted_run}.meta"
 
 		mx profjson -E "${OUTPUT_DIR}/$PROFTOOL_DIR" -o "${OUTPUT_DIR}/${CSV_DIR}/run-${run}.json"
 		mx profdiff report "${OUTPUT_DIR}/$PROFTOOL_DIR/optimization_log" "${OUTPUT_DIR}/${CSV_DIR}/run-${run}.json" >> "${OUTPUT_DIR}/${CSV_DIR}/run-${run}.log"

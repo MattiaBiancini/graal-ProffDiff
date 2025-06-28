@@ -292,13 +292,13 @@ public class Experiment {
      * @param writer
      * @param experimentName
      */
-    public void writeHotMethodsCSV(Writer writer, String experimentName, String name, String optimizationLog, String proftoolOutput) throws IOException {
+    public void writeHotMethodsCSV(Writer writer, String experimentName, String name, String optimizationLog, String proftoolOutput, String outputDirectory) throws IOException {
         List<String[]> csv = new ArrayList<>();
         Iterable<ProftoolMethod> topMethods = () -> proftoolMethods.stream()
                 .sorted((method1, method2) -> Long.compare(method2.getPeriod(), method1.getPeriod())).limit(10)
                 .iterator();
 
-        File csvOutput = new File(experimentName + "-hot-methods.csv");
+        File csvOutput = new File(outputDirectory + "/" + experimentName + "-hot-methods.csv");
         writer.writeln("Writing hot methods CSV to " + csvOutput.getAbsolutePath());
         writer.writeln("Processing experiment with optimization log '" + optimizationLog + "' and proftool output '" + proftoolOutput + "'...");
 
@@ -326,9 +326,10 @@ public class Experiment {
 
             csv.add(new String[]{experimentName, name, String.valueOf(i), String.format("%.2f", execution),
                     String.format("%.2f", cycles), level, compilationId, methodName});
+            
         }
 
-        try (PrintWriter pw = new PrintWriter(new FileWriter(csvOutput, /* append= */ fileExists))) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(csvOutput, fileExists))) {
             csv.stream()
                     .map(this::convertToCSV)
                     .forEach(pw::println);
