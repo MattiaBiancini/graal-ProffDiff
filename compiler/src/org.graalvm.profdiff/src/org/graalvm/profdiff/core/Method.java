@@ -29,7 +29,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.graalvm.collections.Pair;
-import jdk.graal.compiler.java.StableMethodNameFormatter;
 import org.graalvm.profdiff.core.inlining.InliningPath;
 import org.graalvm.profdiff.core.inlining.InliningTreeNode;
 import org.graalvm.profdiff.core.optimization.Optimization;
@@ -77,7 +76,7 @@ public class Method {
             throw new IllegalArgumentException("The provided argument is a multi-method name: " + methodName);
         }
         compilationUnits = new ArrayList<>();
-        this.methodName = StableMethodNameFormatter.findStableLambdaMethodName(methodName);
+        this.methodName = Method.formatLambda(methodName);
         this.experiment = experiment;
         totalPeriod = 0;
     }
@@ -270,5 +269,18 @@ public class Method {
      */
     public static String removeMultiMethodKey(String multiMethodName) {
         return splitMultiMethodName(multiMethodName).getLeft();
+    }
+
+    private static String formatLambda(String methodName) {
+        if (methodName.contains(StableMethodNameFormatter.MULTI_METHOD_KEY_SEPARATOR)) {
+            return methodName;
+        }
+        
+        if (methodName.toLowerCase().contains("lambda")) {
+            methodName = methodName.replaceAll("lambda\\$0x[0-9]+", "lambda");
+            methodName = methodName.replaceAll("Lambda\\$0x[0-9]+", "Lambda");
+        }
+
+        return methodName;
     }
 }
