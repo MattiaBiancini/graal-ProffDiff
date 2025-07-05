@@ -77,7 +77,7 @@ public class Method {
             throw new IllegalArgumentException("The provided argument is a multi-method name: " + methodName);
         }
         compilationUnits = new ArrayList<>();
-        this.methodName = methodName;
+        this.methodName = StableMethodNameFormatter.findStableLambdaMethodName(methodName);
         this.experiment = experiment;
         totalPeriod = 0;
     }
