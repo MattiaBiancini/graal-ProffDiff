@@ -72,9 +72,6 @@ public class Method {
      * @param experiment the experiment to which the method belongs
      */
     public Method(String methodName, Experiment experiment) {
-        if (methodName.contains(StableMethodNameFormatter.MULTI_METHOD_KEY_SEPARATOR)) {
-            throw new IllegalArgumentException("The provided argument is a multi-method name: " + methodName);
-        }
         compilationUnits = new ArrayList<>();
         this.methodName = Method.formatLambda(methodName);
         this.experiment = experiment;
@@ -272,9 +269,6 @@ public class Method {
     }
 
     private static String formatLambda(String methodName) {
-        if (methodName.contains(StableMethodNameFormatter.MULTI_METHOD_KEY_SEPARATOR)) {
-            return methodName;
-        }
         
         if (methodName.toLowerCase().contains("lambda")) {
             methodName = methodName.replaceAll("lambda\\$0x[0-9]+", "lambda");
