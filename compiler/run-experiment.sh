@@ -12,6 +12,10 @@ ITERATIONS=""
 HOME_DIR="/home/user2/variability-measurements-infrastructure"
 VERSIONS=("23" "24")
 
+# Late Compilation Threshold
+TIER3=500
+TIER4=10000
+
 # Print usage function
 usage() {
 		echo "Usage: ./run-experiment.sh -b <benchmark> -w <workload> -e <experiment_name> [-d <output_dir>] [-r <runs>] [-i <iterations>]"
@@ -124,6 +128,11 @@ run_graal_version() {
 			-Djava.security.manager=allow
 		)
 
+		LATE_COMPILE_FLAGS=(
+			-XX:CompilationMode=high-only \
+			-XX:Tier4InvocationThreshold=$TIER4 \
+		)
+
 		# 3. Compilation logging & debug
 		COMP_LOG_FLAGS=(
 			-XX:+LogCompilation
@@ -202,6 +211,7 @@ run_graal_version() {
 		"${JAVA_CMD}" \
 		"${SERVER_FLAGS[@]}" \
 		"${JVMCI_FLAGS[@]}" \
+		"${LATE_COMPILE_FLAGS[@]}" \
 		"${COMP_LOG_FLAGS[@]}" \
 		"${MEMORY_FLAGS[@]}" \
 		"${EXPORT_AGENT_FLAGS[@]}" \
